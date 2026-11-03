@@ -2,10 +2,10 @@ package com.mcgui.ui;
 
 import com.mcgui.ApplicationConfig;
 import com.mcgui.CellType;
-import com.mcgui.ui.FigureService.*;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.StackPane;
@@ -79,14 +79,14 @@ public class UIController {
                     board[row][col]=CellType.CROSSDIE;
                 }
             }
-            case ZEROLIFE -> {
+            case CIRCLELIFE -> {
                 if (isGoesFirst) {
                     board[row][col] = CellType.CROSSDIE;
                 } else {
                     System.out.println("cannot do");
                 }
             }
-            case ZERODIE, CROSSDIE -> System.out.println("cannot do");
+            case CIRCLEDIE, CROSSDIE -> System.out.println("cannot do");
         }
     }
 
@@ -95,7 +95,14 @@ public class UIController {
         double sizeCell = symbolLayer.getHeight();
         symbolLayer.getChildren().clear();
         FigureService figureService = new FigureService();
-        symbolLayer.getChildren().add(figureService.createCircleAndCross(sizeCell));
+        Node symbol = switch (board[row][col]){
+            case EMPTY -> null;
+            case CROSSLIFE -> figureService.createCross(sizeCell);
+            case CIRCLELIFE -> figureService.createCircle(sizeCell);
+            case CROSSDIE -> figureService.createCircleAndCross(sizeCell);
+            case CIRCLEDIE -> figureService.createShadedCircle(sizeCell);
+        };
+        symbolLayer.getChildren().add(symbol);
     }
 
 

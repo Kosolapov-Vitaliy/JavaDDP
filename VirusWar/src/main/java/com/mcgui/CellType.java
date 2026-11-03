@@ -2,8 +2,8 @@ package com.mcgui;
 
 public enum CellType {
     EMPTY,
-    ZEROLIFE,
-    ZERODIE,
+    CIRCLELIFE,
+    CIRCLEDIE,
     CROSSLIFE,
     CROSSDIE
 }
