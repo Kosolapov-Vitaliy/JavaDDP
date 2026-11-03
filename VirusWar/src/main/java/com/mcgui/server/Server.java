@@ -1,5 +1,7 @@
 package com.mcgui.server;
 
+import com.mcgui.ApplicationConfig;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -7,8 +9,8 @@ import java.net.Socket;
 public class Server {
     public static void main(String[] args){
         try{
-            int port = 8080;
-            ServerSocket socket = new ServerSocket(port);
+            final ApplicationConfig conf = ApplicationConfig.DEFAULT;
+            ServerSocket socket = new ServerSocket(conf.port());
             while(true){
                 Socket clientSocket = socket.accept();
                 ClientConnection clientConnection = new ClientConnection(clientSocket);
