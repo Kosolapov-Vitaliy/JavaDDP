@@ -7,17 +7,22 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class Server {
+
+    private final static int port = ApplicationConfig.DEFAULT.port();
+
     public static void main(String[] args){
-        try{
-            final ApplicationConfig conf = ApplicationConfig.DEFAULT;
-            ServerSocket socket = new ServerSocket(conf.port());
+        try (ServerSocket server = new ServerSocket(port)){
+            ServerEngine engine= new ServerEngine();
+            System.out.println("Start server");
             while(true){
-                Socket clientSocket = socket.accept();
-                ClientConnection clientConnection = new ClientConnection(clientSocket);
+                Socket client = server.accept();
+                ClientHandler clientHandler = new ClientHandler(client, engine);
             }
 
         } catch (IOException e) {
-            System.out.println("Listen socket:" + e.getMessage());
+            System.out.println("ERROR: " + e.getMessage());
+            throw new RuntimeException(e);
         }
+
     }
 }

@@ -1,11 +1,16 @@
 package com.mcgui.ui;
 
+import com.google.gson.Gson;
 import com.mcgui.ApplicationConfig;
 import com.mcgui.CellType;
+import com.mcgui.Message;
+import com.mcgui.MessageType;
+import com.mcgui.client.NetClient;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.StackPane;
@@ -15,6 +20,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 
+import java.io.IOException;
 import java.util.Optional;
 
 public class UIController {
@@ -22,6 +28,8 @@ public class UIController {
     private final static ApplicationConfig conf = ApplicationConfig.DEFAULT;
     private String playerName;
     private boolean isGoesFirst = true;
+    private NetClient client;
+    private static final Gson gson = new Gson();
 
     @FXML
     private TilePane tilePane;
@@ -35,6 +43,11 @@ public class UIController {
 
     @FXML
     public void initialize(){
+        client = new NetClient(this);
+        client.start();
+    }
+
+    public void ConnectionSuccess() throws IOException {
         setPaneParam();
         double maxCellSize = (tilePane.getMaxHeight()- conf.boardSize()*2)/ conf.boardSize();
         for(int i=0; i< conf.boardSize()* conf.boardSize();i++){
@@ -59,10 +72,19 @@ public class UIController {
 
             tilePane.getChildren().add(container);
         }
-        AskName();
-        Text nameText = new Text("Имя игрока: "+ playerName);
-        playerInfo.getChildren().add(nameText);
+        AskName("Введите ваше имя:");
     }
+
+    public void ConnectionError(){
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setHeaderText("ERROR");
+        alert.setContentText("Сервер выключен");
+        alert.showAndWait();
+
+        Platform.exit();
+    }
+
+
 
     @FXML
     private void onStartGame(){
@@ -114,10 +136,10 @@ public class UIController {
         tilePane.setVgap(2);
     }
 
-    private void AskName(){
+    private void AskName(String headerText) throws IOException {
         TextInputDialog dialog =new TextInputDialog("Player");
         dialog.setTitle("Вход в игру");
-        dialog.setHeaderText("Введите ваше имя:");
+        dialog.setHeaderText(headerText);
         Optional<String> name =dialog.showAndWait();
         if(name.isEmpty()){
             Platform.exit();
@@ -125,9 +147,41 @@ public class UIController {
         }
         String finalName = name.get().trim();
         if (finalName.isEmpty()){
-            AskName();
+            AskName(headerText);
+            return;
         }
-        playerName = finalName;
+        Message msg = new Message(MessageType.CONNECT);
+        msg.setPlayerName(finalName);
+        client.send(gson.toJson(msg));
+
+    }
+
+    public void update(Message msg){
+        if(msg==null||msg.getMsgType()==null){
+            return;
+        }
+        switch(msg.getMsgType()){
+            case ACCEPT_CONNECT -> {
+                playerName = msg.getPlayerName();
+                Platform.runLater(()->{
+                    Text nameText = new Text("Имя игрока: "+ playerName);
+                    playerInfo.getChildren().add(nameText);
+                });
+
+            }
+            case ERROR_CONNECT -> {
+                System.out.println("Error");
+                Platform.runLater(()->{
+                    try {
+                        AskName("Имя занято, введите другое:");
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+            }
+
+        }
+
     }
 
     public void Shutdown() {

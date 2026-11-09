@@ -5,9 +5,11 @@ module com.mcgui.viruswar {
     requires org.controlsfx.controls;
     requires com.dlsc.formsfx;
     requires org.kordamp.bootstrapfx.core;
+    requires com.google.gson;
 
     opens com.mcgui.client to javafx.fxml;
     opens com.mcgui.ui to javafx.fxml;
+    opens com.mcgui to com.google.gson;
     exports com.mcgui.client;
     exports com.mcgui.ui;
     exports com.mcgui.server;
